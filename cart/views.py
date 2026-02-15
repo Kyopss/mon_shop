@@ -14,27 +14,22 @@ def cart_summary(request):
     total = cart.get_total_price()
 
     return render(request, 'cart/cart_summary.html', { # Ajoute 'cart/' ici
-    'cart_products': cart_products, 
-    'quantities': quantities, 
+    'cart_products': cart_products,
+    'quantities': quantities,
     'total': total
     })
 
 def cart_add(request):
-    # On récupère le panier
     cart = Cart(request)
-
-    # Si l'action est bien un "POST" (un clic sécurisé)
     if request.POST.get('action') == 'post':
-        # 1. On récupère l'ID du produit envoyé par le bouton
         product_id = int(request.POST.get('product_id'))
-        
-        # 2. On cherche le produit dans la base de données
-        product = get_object_or_404(Product, id=product_id)
-        
-        # 3. On l'ajoute au panier
-        cart.add(product=product)
+        product_color = request.POST.get('product_color') # On récupère la couleur
 
-        # 4. On renvoie la nouvelle quantité totale au navigateur
+        product = get_object_or_404(Product, id=product_id)
+
+        # On passe la couleur à la méthode add
+        cart.add(product=product, color=product_color)
+
         cart_quantity = cart.__len__()
         response = JsonResponse({'qty': cart_quantity})
         return response

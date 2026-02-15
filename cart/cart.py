@@ -14,33 +14,38 @@ class Cart():
 
         if 'session_key' not in self.session:
             cart = self.session['session_key'] = {}
-        
+
         self.cart = cart
 
-    def add(self, product, quantity=1):
-        """
-        Ajouter un produit au panier
-        """
+    def add(self, product, color):
         product_id = str(product.id)
+        # On crée une clé unique combinant ID et Couleur
+        selection_key = f"{product_id}_{color}"
 
-        # Si le produit n'est pas encore dans le panier, on le crée à 0
-        if product_id not in self.cart:
-            self.cart[product_id] = {'price': str(product.price), 'qty': 0}
-        
-        # --- CORRECTION ICI ---
-        # Avant c'était : self.cart[product_id]['qty'] = quantity
-        # Maintenant on additionne :
-        self.cart[product_id]['qty'] = self.cart[product_id]['qty'] + quantity
-        
-        self.session.modified = True
-    
+        if selection_key not in self.cart:
+            self.cart[selection_key] = {
+                'price': str(product.price),
+                'qty': 1,
+                'color': color, # On stocke la couleur
+                'product_id': product_id
+            }
+        else:
+            self.cart[selection_key]['qty'] += 1
+
+    self.session.modified = True
+        }
+    else:
+        self.cart[selection_key]['qty'] += 1
+
+    self.session.modified = True
+
     def update(self, product, quantity):
         product_id = str(product)
         product_qty = int(quantity)
 
         if product_id in self.cart:
             self.cart[product_id]['qty'] = product_qty
-        
+
         self.session.modified = True
 
     def __len__(self):
@@ -72,7 +77,7 @@ class Cart():
         product_ids = self.cart.keys()
         products = Product.objects.filter(id__in=product_ids)
         total = 0
-        
+
         for key, value in self.cart.items():
             key = int(key)
             for product in products:
@@ -87,9 +92,9 @@ class Cart():
         product_id = str(product)
         if product_id in self.cart:
             del self.cart[product_id]
-        
+
         self.session.modified = True
-    
+
     def clear(self):
         # On vide le dictionnaire du panier
         self.session['session_key'] = {}

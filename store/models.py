@@ -28,6 +28,14 @@ class Product(models.Model):
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='uploads/gallery/')
-    
+
     def __str__(self):
         return f"Image pour {self.product.name}"
+
+class Variation(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variations')
+    category = models.CharField(max_length=100, choices=[('color', 'Couleur'), ('size', 'Taille')])
+    value = models.CharField(max_length=100) # ex: "Rouge", "Bleu"
+
+    def __str__(self):
+        return f"{self.product.name} - {self.category}: {self.value}"

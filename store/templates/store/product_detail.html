@@ -5,15 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ product.name }} | Mon Shop</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .product-img-main {
+            max-height: 500px;
+            object-fit: contain;
+            background-color: #fff;
+        }
+        .img-thumbnail:hover {
+            border-color: #0d6efd;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body class="bg-light">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{% url 'store:product_all' %}">MON SHOP 🛍️</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
@@ -30,40 +38,49 @@
     </nav>
 
     <div class="container mt-5">
-        <div class="row">
+        <div class="row bg-white p-4 rounded shadow-sm">
             <div class="col-md-6 mb-4">
-                <div class="card border-0">
-                    {% if product.image %}
-                        <img src="{{ product.image.url }}" class="img-fluid rounded mb-3" alt="{{ product.name }}">
-                    {% endif %}
-                    
-                    <div class="d-flex gap-2 overflow-auto">
-                        {% for photo in product.images.all %}
-                            <img src="{{ photo.image.url }}" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
-                        {% endfor %}
-                    </div>
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="img-fluid rounded mb-3 product-img-main" alt="{{ product.name }}">
+                {% endif %}
+                
+                <div class="d-flex gap-2 overflow-auto pb-2">
+                    {% for photo in product.images.all %}
+                        <img src="{{ photo.image.url }}" class="img-thumbnail" style="width: 80px; height: 80px; object-fit: cover;">
+                    {% endfor %}
                 </div>
             </div>
 
             <div class="col-md-6">
                 <h1 class="display-5 fw-bold">{{ product.name }}</h1>
-                <p class="text-muted fs-4">{{ product.price }} €</p>
+                <p class="text-success fs-3 fw-bold">{{ product.price }} €</p>
                 <hr>
                 
-                <p class="lead">{{ product.description }}</p>
+                <p class="lead text-secondary">{{ product.description }}</p>
 
-                <div class="d-grid gap-2 mt-5">
-                    <button type="button" value="{{ product.id }}" id="add-cart" class="btn btn-primary btn-lg">
-                        Ajouter au panier
-                    </button>
-                    
-                    <p class="text-center text-muted small mt-2">
-                        {% if product.stock > 0 %}
-                            <span class="text-success">✔ En stock ({{ product.stock }} restants)</span>
-                        {% else %}
-                            <span class="text-danger">❌ Rupture de stock</span>
-                        {% endif %}
-                    </p>
+                <div class="mt-4 p-3 border rounded bg-light">
+                    <div class="mb-4">
+                        <label for="color-select" class="form-label fw-bold text-dark">🎨 Choisir une couleur :</label>
+                        <select class="form-select form-select-lg" id="color-select">
+                            <option value="Noir" selected>Noir 🖤</option>
+                            <option value="Gris">Gris 🩶</option>
+                            <option value="Bleu">Bleu 💙</option>
+                        </select>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="button" value="{{ product.id }}" id="add-cart" class="btn btn-dark btn-lg shadow">
+                            Ajouter au panier
+                        </button>
+                        
+                        <p class="text-center mt-2 mb-0">
+                            {% if product.stock > 0 %}
+                                <small class="text-success fw-bold">✔ En stock ({{ product.stock }} restants)</small>
+                            {% else %}
+                                <small class="text-danger fw-bold">❌ Rupture de stock</small>
+                            {% endif %}
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -81,15 +98,24 @@
                 url: '{% url "cart_add" %}',
                 data: {
                     product_id: $('#add-cart').val(),
+                    product_color: $('#color-select').val(), // <-- ON RÉCUPÈRE LA COULEUR ICI
                     csrfmiddlewaretoken: '{{ csrf_token }}',
                     action: 'post'
                 },
                 success: function(json){
-                    // Met à jour le compteur dans la navbar
-                    document.getElementById("cart_qty").textContent = json.qty
+                    // Animation visuelle de succès sur le bouton
+                    let btn = $('#add-cart');
+                    let originalText = btn.html();
+                    btn.removeClass('btn-dark').addClass('btn-success').text('Ajouté ! ✅');
+                    
+                    document.getElementById("cart_qty").textContent = json.qty;
+
+                    setTimeout(function(){
+                        btn.removeClass('btn-success').addClass('btn-dark').html(originalText);
+                    }, 2000);
                 },
                 error: function(xhr, errmsg, err){
-                    console.log(errmsg);
+                    alert("Erreur lors de l'ajout au panier");
                 }
             });
         })
