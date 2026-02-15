@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Shop | Accueil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .card-img-top {
+            height: 300px;
+            object-fit: cover;
+            background-color: #f8f9fa;
+        }
+        .gallery-thumb {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .gallery-thumb:hover {
+            transform: scale(1.1);
+        }
+        /* Petit effet au survol de la carte produit pour montrer que c'est cliquable */
+        .product-card:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'store:product_all' %}">MON SHOP 🛍️</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'store:product_all' %}">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'store:category' 'pulls' %}">Pulls</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'store:category' 't-shirts' %}">T-Shirts</a></li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary text-white ms-3 px-4" href="{% url 'cart_summary' %}">
+                            Panier (<span id="cart_qty">{{ cart|length }}</span>)
+                        </a>
+                    </li>
+
+                    {% if user.is_authenticated %}
+                        <li class="nav-item ms-3">
+                            <a class="nav-link fw-bold text-white" href="{% url 'user_orders' %}">📦 Mes Commandes</a>
+                        </li>
+                        <li class="nav-item ms-3">
+                            <a class="nav-link text-danger" href="{% url 'logout' %}">Se déconnecter</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item ms-3">
+                            <a class="nav-link" href="{% url 'login' %}">Se connecter</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">S'inscrire</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="text-center mb-5">
+            {% if category %}
+                {{ category.name }}
+            {% else %}
+                Nos Derniers Articles
+            {% endif %}
+        </h1>
+
+        <div class="row">
+            {% for product in products %}
+            <div class="col-12 col-md-6 col-lg-4 mb-4">
+                <div class="card shadow-sm h-100 border-0 product-card">
+                    
+                    <a href="{% url 'store:product_detail' product.slug %}">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                        {% else %}
+                            <div class="d-flex align-items-center justify-content-center text-muted card-img-top">
+                                <span>Pas d'image</span>
+                            </div>
+                        {% endif %}
+                    </a>
+
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <a href="{% url 'store:product_detail' product.slug %}" class="text-decoration-none text-dark">
+                                <h5 class="card-title mb-0">{{ product.name }}</h5>
+                            </a>
+                            <span class="badge bg-success fs-6">{{ product.price }} €</span>
+                        </div>
+                        
+                        {% if product.images.all %}
+                        <div class="d-flex gap-2 mb-3 overflow-auto py-1">
+                            {% for photo in product.images.all %}
+                                <img src="{{ photo.image.url }}" class="gallery-thumb" alt="Vue produit">
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <p class="card-text text-muted small">
+                            {{ product.description|truncatewords:20 }}
+                        </p>
+                        
+                        <button type="button" value="{{ product.id }}" class="btn btn-outline-dark w-100 mt-auto add-cart">Ajouter au panier</button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p>Aucun produit disponible pour le moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <footer class="text-center py-4 mt-5 text-muted">
+        &copy; 2024 Mon Shop - Fait avec Django & Bootstrap
+    </footer>
+
+    <div style="display: none;">
+        {% csrf_token %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // On surveille les clics sur n'importe quel élément avec la classe "add-cart"
+        $(document).on('click', '.add-cart', function(e){
+            e.preventDefault();
+            
+            // On récupère l'ID du produit
+            var product_id = $(this).val(); 
+            // On récupère le token de sécurité depuis le champ caché
+            var token = $('input[name=csrfmiddlewaretoken]').val();
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "cart_add" %}',
+                data: {
+                    product_id: product_id,
+                    csrfmiddlewaretoken: token, // <--- On utilise la variable récupérée
+                    action: 'post'
+                },
+                success: function(json){
+                    console.log("Succès :", json);
+                    document.getElementById("cart_qty").textContent = json.qty
+                },
+                error: function(xhr, errmsg, err){
+                    console.log("Erreur :", errmsg);
+                    console.log(xhr.status + ": " + xhr.responseText);
+                }
+            });
+        })
+    </script>
+</body>
+</html>

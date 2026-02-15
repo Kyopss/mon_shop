@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Paiement - Confirmation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-dark mb-5">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'store:product_all' %}">MON SHOP 🛍️</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h4 class="mb-0">💳 Paiement</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Vérifiez vos informations</h5>
+                        
+                        <div class="p-3 bg-light rounded mb-4">
+                            <strong>Adresse de livraison :</strong><br>
+                            {{ shipping_info.full_name }}<br>
+                            {{ shipping_info.address1 }}<br>
+                            {{ shipping_info.city }}, {{ shipping_info.zipcode }}<br>
+                            {{ shipping_info.state }}<br>
+                            <small class="text-muted">{{ shipping_info.email }}</small>
+                            <br>
+                            <a href="{% url 'checkout' %}" class="btn btn-outline-secondary btn-sm mt-2">Modifier l'adresse</a>
+                        </div>
+
+                        <hr>
+
+                        <h5 class="mb-3">Choisir une méthode de paiement :</h5>
+                        
+                        <button id="pay-button" class="btn btn-primary w-100 py-2 mb-2">
+                        Payer par Carte Bancaire 💳
+                        </button>
+                        <button class="btn btn-warning w-100 py-2">
+                            Payer avec PayPal
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white py-3">
+                        <h4 class="mb-0">🛒 Total</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            {% for product in cart_products %}
+                                <li class="list-group-item d-flex justify-content-between lh-sm">
+                                    <div>
+                                        <h6 class="my-0">{{ product.name }}</h6>
+                                        <small class="text-muted">Qté: 
+                                            {% for key, value in quantities.items %}
+                                                {% if key == product.id|slugify %}{{ value.qty }}{% endif %}
+                                            {% endfor %}
+                                        </small>
+                                    </div>
+                                    <span class="text-muted">{{ product.price }} €</span>
+                                </li>
+                            {% endfor %}
+                            <li class="list-group-item d-flex justify-content-between bg-light">
+                                <span class="fw-bold">Total à payer</span>
+                                <strong class="text-success">{{ totals }} €</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        $(document).on('click', '#pay-button', function(e){
+            e.preventDefault();
+            
+            $.ajax({
+                type: 'POST',
+                url: '{% url "process_order" %}',
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    action: 'post'
+                },
+                success: function(json){
+                    if(json.success){
+                        alert("Paiement validé ! Commande #" + json.order_id + " enregistrée.");
+                        window.location.href = "{% url 'store:product_all' %}"; // Retour accueil
+                    }
+                },
+                error: function(xhr, errmsg, err){
+                    console.log(errmsg);
+                }
+            });
+        })
+    </script>
+</body>
+</html>

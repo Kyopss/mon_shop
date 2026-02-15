@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon Panier | Récapitulatif</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-dark mb-5">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'store:product_all' %}">MON SHOP 🛍️</a>
+            <a class="btn btn-primary text-white" href="{% url 'cart_summary' %}">
+                Panier (<span id="cart_qty">{{ cart|length }}</span>)
+            </a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="mb-4">Votre Panier</h1>
+
+        {% if cart_products %}
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0 text-center align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produit</th>
+                                <th>Prix</th>
+                                <th>Quantité</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in cart_products %}
+                            <tr>
+                                <td class="text-start ps-4">
+                                    <div class="d-flex align-items-center">
+                                        {% if product.image %}
+                                            <img src="{{ product.image.url }}" style="width: 60px; height: 60px; object-fit: cover;" class="rounded me-3">
+                                        {% endif %}
+                                        <span class="fw-bold">{{ product.name }}</span>
+                                    </div>
+                                </td>
+                                
+                                <td>{{ product.price }} €</td>
+                                
+                                <td>
+                                    {% for key, value in quantities.items %}
+                                        {% if key == product.id|slugify %}
+                                            
+                                            <div class="d-flex justify-content-center">
+                                                <input type="number" min="1" class="form-control form-control-sm product-qty text-center" 
+                                                       data-index="{{ product.id }}" 
+                                                       value="{{ value.qty }}" 
+                                                       style="width: 80px;">
+                                            </div>
+
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+
+                                <td>
+                                    <button type="button" data-index="{{ product.id }}" class="btn btn-danger btn-sm delete-product">
+                                        Supprimer
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="card-footer bg-white text-end p-4">
+                    <h3>Total : <span class="text-primary">{{ total }} €</span></h3>
+                    <a href="{% url 'checkout' %}" class="btn btn-success btn-lg mt-2">Passer au paiement 👉</a>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <h3>Votre panier est vide 😢</h3>
+                <a href="{% url 'store:product_all' %}" class="btn btn-primary mt-3">Retourner à la boutique</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // --- SCRIPT POUR SUPPRIMER ---
+        $(document).on('click', '.delete-product', function(e){
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: '{% url "cart_delete" %}',
+                data: {
+                    product_id: $(this).data('index'),
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    action: 'post'
+                },
+                success: function(json){
+                    location.reload(); 
+                },
+                error: function(xhr, errmsg, err){
+                    console.log(errmsg);
+                }
+            });
+        });
+
+        // --- SCRIPT AUTO-UPDATE (Dès qu'on change le chiffre) ---
+        // L'événement "change" se déclenche quand on appuie sur Entrée ou qu'on clique ailleurs
+        $(document).on('change', '.product-qty', function(e){
+            e.preventDefault();
+            
+            var productid = $(this).data('index');
+            var qty = $(this).val();
+
+            // Sécurité : Si l'utilisateur tape 0 ou moins, on remet à 1
+            if(qty < 1){
+                qty = 1;
+                $(this).val(1);
+            }
+            
+            $.ajax({
+                type: 'POST',
+                url: '{% url "cart_update" %}',
+                data: {
+                    product_id: productid,
+                    product_qty: qty,
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    action: 'post'
+                },
+                success: function(json){
+                    location.reload(); 
+                },
+                error: function(xhr, errmsg, err){
+                    console.log(errmsg);
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
