@@ -11,7 +11,8 @@ def cart_summary(request):
     # 3. On récupère les quantités (pour savoir combien de chaque)
     quantities = cart.get_quants()
     # 4. On récupère le total
-    total = cart.get_total_price()
+    # LA LIGNE CORRIGÉE :
+    total = cart.cart_total()
 
     return render(request, 'cart/cart_summary.html', { # Ajoute 'cart/' ici
     'cart_products': cart_products,
