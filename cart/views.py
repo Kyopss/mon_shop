@@ -24,14 +24,20 @@ def cart_add(request):
     cart = Cart(request)
     if request.POST.get('action') == 'post':
         product_id = int(request.POST.get('product_id'))
-        product_color = request.POST.get('product_color') # On récupère la couleur
-
+        
+        # 1. On récupère la couleur envoyée par la page
+        product_color = request.POST.get('product_color')
+        
+        # 2. LA RÈGLE DE SÉCURITÉ : Si la couleur est vide ou vaut 'None', on force 'Noir'
+        if not product_color or product_color == 'None' or product_color == '':
+            product_color = 'Noir'
+            
+        # 3. On récupère le produit et on l'ajoute
         product = get_object_or_404(Product, id=product_id)
-
-        # On passe la couleur à la méthode add
         cart.add(product=product, color=product_color)
-
-        cart_quantity = cart.__len__()
+        
+        # La suite de ton code (calcul de quantité, JsonResponse...)
+        cart_quantity = len(cart)
         response = JsonResponse({'qty': cart_quantity})
         return response
 
