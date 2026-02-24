@@ -32,40 +32,41 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for product in cart_products %}
-                            <tr>
-                                <td class="text-start ps-4">
-                                    <div class="d-flex align-items-center">
-                                        {% if product.image %}
-                                            <img src="{{ product.image.url }}" style="width: 60px; height: 60px; object-fit: cover;" class="rounded me-3">
-                                        {% endif %}
-                                        <span class="fw-bold">{{ product.name }}</span>
-                                    </div>
-                                </td>
-                                
-                                <td>{{ product.price }} €</td>
-                                
-                                <td>
-                                    {% for key, value in quantities.items %}
-                                        {% if key == product.id|slugify %}
-                                            
+                            {% for key, item in quantities.items %}
+                                {% for product in cart_products %}
+                                    {% if product.id|slugify == item.product_id %}
+                                    <tr>
+                                        <td class="text-start ps-4">
+                                            <div class="d-flex align-items-center">
+                                                {% if product.image %}
+                                                    <img src="{{ product.image.url }}" style="width: 60px; height: 60px; object-fit: cover;" class="rounded me-3">
+                                                {% endif %}
+                                                <div>
+                                                    <span class="fw-bold">{{ product.name }}</span><br>
+                                                    <small class="text-muted">Couleur : <strong>{{ item.color }}</strong></small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        
+                                        <td>{{ product.price }} €</td>
+                                        
+                                        <td>
                                             <div class="d-flex justify-content-center">
                                                 <input type="number" min="1" class="form-control form-control-sm product-qty text-center" 
-                                                       data-index="{{ product.id }}" 
-                                                       value="{{ value.qty }}" 
+                                                       data-index="{{ key }}" 
+                                                       value="{{ item.qty }}" 
                                                        style="width: 80px;">
                                             </div>
+                                        </td>
 
-                                        {% endif %}
-                                    {% endfor %}
-                                </td>
-
-                                <td>
-                                    <button type="button" data-index="{{ product.id }}" class="btn btn-danger btn-sm delete-product">
-                                        Supprimer
-                                    </button>
-                                </td>
-                            </tr>
+                                        <td>
+                                            <button type="button" data-index="{{ key }}" class="btn btn-danger btn-sm delete-product">
+                                                Supprimer
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
                             {% endfor %}
                         </tbody>
                     </table>
@@ -95,7 +96,7 @@
                 type: 'POST',
                 url: '{% url "cart_delete" %}',
                 data: {
-                    product_id: $(this).data('index'),
+                    product_id: $(this).data('index'), // Envoie '4_Noir' au lieu de '4'
                     csrfmiddlewaretoken: '{{ csrf_token }}',
                     action: 'post'
                 },
@@ -109,14 +110,12 @@
         });
 
         // --- SCRIPT AUTO-UPDATE (Dès qu'on change le chiffre) ---
-        // L'événement "change" se déclenche quand on appuie sur Entrée ou qu'on clique ailleurs
         $(document).on('change', '.product-qty', function(e){
             e.preventDefault();
             
-            var productid = $(this).data('index');
+            var productid = $(this).data('index'); // Envoie '4_Noir'
             var qty = $(this).val();
 
-            // Sécurité : Si l'utilisateur tape 0 ou moins, on remet à 1
             if(qty < 1){
                 qty = 1;
                 $(this).val(1);
@@ -140,6 +139,5 @@
             });
         });
     </script>
-
 </body>
 </html>

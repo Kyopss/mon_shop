@@ -77,3 +77,14 @@ class Cart():
     def clear(self):
         self.session['session_key'] = {}
         self.session.modified = True
+    
+    def update(self, product_key, quantity):
+        product_key = str(product_key)
+        qty = int(quantity)
+
+        # On met à jour la quantité du bon tiroir (ex: "4_Noir")
+        if product_key in self.cart:
+            self.cart[product_key]['qty'] = qty
+
+        self.session.modified = True
+        return self.cart
