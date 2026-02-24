@@ -10,7 +10,7 @@ def checkout(request):
     cart = Cart(request)
     cart_products = cart.get_prods()
     quantities = cart.get_quants()
-    totals = cart.get_total_price()
+    totals = cart.cart_total()
 
     if request.user.is_authenticated:
         try:
