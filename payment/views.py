@@ -39,7 +39,7 @@ def billing_info(request):
     cart = Cart(request)
     cart_products = cart.get_prods()
     quantities = cart.get_quants()
-    totals = cart.get_total_price()
+    totals = cart.cart_total()
 
     if request.user.is_authenticated:
         try:
@@ -62,7 +62,7 @@ def process_order(request):
         cart = Cart(request)
         cart_products = cart.get_prods()
         quantities = cart.get_quants()
-        totals = cart.get_total_price()
+        totals = cart.cart_total()
 
         # --- MOUCHARD 1 : Vérif des données ---
         print(f"👀 DEBUG - Panier complet: {cart.cart}")
