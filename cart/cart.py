@@ -47,7 +47,7 @@ class Cart():
         return self.cart
 
     def cart_total(self):
-        # On récupère les produits pour avoir leurs vrais prix
+        # On récupère les IDs pour chercher les produits dans la base de données
         product_ids = []
         for key in self.cart.keys():
             if '_' in str(key):
@@ -58,15 +58,14 @@ class Cart():
         products = Product.objects.filter(id__in=product_ids)
         total = 0
 
+        # Calcul du total simplifié (sans les soldes)
         for key, value in self.cart.items():
             key_id = str(value['product_id'])
             for product in products:
                 if str(product.id) == key_id:
-                    # On multiplie le prix du produit par la quantité
-                    if product.is_sale:
-                        total += (product.sale_price * value['qty'])
-                    else:
-                        total += (product.price * value['qty'])
+                    # On multiplie simplement le prix normal par la quantité
+                    total += (product.price * value['qty'])
+                    
         return total
 
     def delete(self, product_key):
