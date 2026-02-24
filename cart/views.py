@@ -45,13 +45,26 @@ def cart_delete(request):
         response = JsonResponse({'product': product_id})
         return response
 
+def cart_delete(request):
+    cart = Cart(request)
+    if request.POST.get('action') == 'post':
+        # On lit la clé comme du texte (str) et SURTOUT PAS comme un entier (int) !
+        product_id = str(request.POST.get('product_id'))
+        
+        # On supprime le produit en utilisant notre clé complexe (ex: "4_Noir")
+        cart.delete(product_key=product_id)
+        
+        response = JsonResponse({'product': product_id})
+        return response
+
 def cart_update(request):
     cart = Cart(request)
     if request.POST.get('action') == 'post':
-        product_id = int(request.POST.get('product_id'))
+        # Pareil ici : l'ID est un texte (str), mais la quantité reste un entier (int)
+        product_id = str(request.POST.get('product_id'))
         product_qty = int(request.POST.get('product_qty'))
-
-        cart.update(product=product_id, quantity=product_qty)
-
+        
+        cart.update(product_key=product_id, quantity=product_qty)
+        
         response = JsonResponse({'qty': product_qty})
         return response
